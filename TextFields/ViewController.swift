@@ -13,9 +13,14 @@ class ViewController: UIViewController, UITextFieldDelegate{
     @IBOutlet weak var letterDashNumberField: UITextField!
     
     
-    private let allowedChars = 10
+    public let allowedChars = 10
+    let inputLimit = InputLimit()
+    var onlyNums = false
+    let onlyLetters = OnlyLettersAndOnlyNums()
+    
     private let minLength = 8
     private lazy var regex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\dd$@$!%*?&#]{\(minLength),}"
+    
     
     
     override func viewDidLoad() {
@@ -35,67 +40,28 @@ class ViewController: UIViewController, UITextFieldDelegate{
         onlyLettersTextField.becomeFirstResponder()
     }
     
-    //MARK: TF1, no digits & TF3 only letters\dash\only numbers
-    
-    var onlyNums = false
-    
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         switch textField {
+            //           MARK: TF3 only letters\dash\only numbers
         case letterDashNumberField:
-            if string == "-" && onlyNums == false {
+            if string == "-" && onlyNums == false{
                 onlyNums = true
             } else if string == "-" && onlyNums == true {
                 onlyNums = false
             }
-            return onlyNums ? onlyNumbers(string: string) : onlyLetters(string: string)
+            return onlyNums ? OnlyLettersAndOnlyNums().onlyNumbers(string: string) : OnlyLettersAndOnlyNums().onlyLetters(string: string)
+            //            MARK: TF1, no digits
         case onlyLettersTextField:
-            return onlyLetters(string: string)
+            return OnlyLettersAndOnlyNums().onlyLetters(string: string)
+            //            MARK: TF3, characters limit
+        case inputLimitField:
+            inputLimit.checkRemainingChars(inputLimitField, characterCountLabel)
         default:
             break
         }
         return true
     }
     
-    func onlyNumbers(string: String) -> Bool {
-        if string == "-" {
-            return true
-        }
-        return !onlyLetters(string: string)
-    }
-    
-    func onlyLetters(string: String) -> Bool {
-        let leftSideField = CharacterSet.decimalDigits
-        let rightSideField = CharacterSet(charactersIn: string)
-        return !leftSideField.isSuperset(of: rightSideField)
-    }
-    
-    //MARK:  TF2, characters limit, done
-    
-    func checkRemainingChars() {
-        let charsInTextView = -(inputLimitField.text?.count ?? 0)
-        let remainingChars = allowedChars + charsInTextView
-        characterCountLabel.textColor = .black
-        inputLimitField.textColor = .black
-        inputLimitField.layer.borderColor = UIColor.systemGray6.cgColor
-        if remainingChars < 0 {
-            inputLimitField.attributedText = getColoredText(text: inputLimitField.text!)
-            characterCountLabel.textColor = .red
-            inputLimitField.layer.borderColor = UIColor.red.cgColor
-            inputLimitField.layer.cornerRadius = 6.0
-            inputLimitField.layer.borderWidth = 1.0
-        }
-        characterCountLabel.text = ("\(String(remainingChars))/10")
-    }
-    func textFieldDidChangeSelection(_ textField: UITextField) {
-        checkRemainingChars()
-    }
-    func getColoredText(text:String) -> NSMutableAttributedString {
-        let string:NSMutableAttributedString = NSMutableAttributedString(string: text)
-        let range: NSRange = NSRange(location: 10, length: string.length - allowedChars)
-        string.addAttribute(.foregroundColor, value: UIColor.red, range: range)
-        return string
-    }
-
 //    MARK: LINK almost done
 
     @IBOutlet weak var toOpenLink: UIButton!
