@@ -12,7 +12,8 @@ class InputLimit {
         return string
     }
     
-    func checkRemainingChars(_ textField: UITextField, _ label: UILabel){
+    
+    func checkRemainingChars(_ textField: UITextField, _ label: UILabel) {
         let charsInTextView = -(textField.text?.count ?? 0)
         let remainingChars = ViewController().allowedChars + charsInTextView
         label.textColor = .black
@@ -27,4 +28,6 @@ class InputLimit {
         }
         label.text = ("\(String(remainingChars))/10")
     }
+    
+
 }
