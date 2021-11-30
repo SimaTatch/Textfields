@@ -12,6 +12,7 @@ class ViewController: UIViewController, UITextFieldDelegate{
     @IBOutlet weak var onlyLettersTextField: UITextField!
     @IBOutlet weak var letterDashNumberField: UITextField!
     
+    var openURlTimer: Timer?
     
     private let allowedChars = 10
     private let minLength = 8
@@ -29,25 +30,42 @@ class ViewController: UIViewController, UITextFieldDelegate{
         letterDashNumberField.delegate = self
         //        4
         toOpenLink.addTarget(self, action: #selector(openLink), for: .touchUpInside)
+        
+        linkTextField.delegate = self
+        linkTextField.addTarget(self, action: #selector(urlTextChanged), for: .editingChanged)
     }
     
     override func viewDidAppear(_ animated: Bool) {
         onlyLettersTextField.becomeFirstResponder()
     }
     
+    
+    @objc
+    func urlTextChanged() {
+        let pattern = "(?i)https?:\\/\\/(?:www\\.)?\\S+(?:\\/|\\b)"
+
+        guard let text = linkTextField.text,
+              text.range(of: pattern, options: .regularExpression) != nil,
+              let url = URL(string: text) else { return  }
+        openURlTimer?.invalidate()
+        openURlTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: false, block: { timer in
+            UIApplication.shared.open(url, options: [:]) { (done) in
+                print("Link was open successfully")
+            }
+        })
+
+    }
     //MARK: TF1, no digits & TF3 only letters\dash\only numbers
     
     var onlyNums = false
     
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        guard string != "" else { return true} // if backspace return true
+
         switch textField {
         case letterDashNumberField:
-            if string == "-" && onlyNums == false {
-                onlyNums = true
-            } else if string == "-" && onlyNums == true {
-                onlyNums = false
-            }
-            return onlyNums ? onlyNumbers(string: string) : onlyLetters(string: string)
+            return shoudAddCharecterToDashField(string: string,
+                                                previousText: letterDashNumberField.text)
         case onlyLettersTextField:
             return onlyLetters(string: string)
         default:
@@ -55,7 +73,24 @@ class ViewController: UIViewController, UITextFieldDelegate{
         }
         return true
     }
-    
+    func shoudAddCharecterToDashField(string: String, previousText: String?) -> Bool {
+        let containsDash = previousText?.contains("-") ?? false
+        if let previousText = previousText { //already have text
+            if !containsDash && string == "-" {
+                return true
+            }
+            if string.count == 1 { // entering throught keyboard
+                if let inputCh = string.last {
+                    return containsDash ? inputCh.isNumber : inputCh.isLetter
+                }
+            } else { // paste
+                return true
+            }
+        } else {
+            return string.last?.isLetter ?? false
+        }
+        return true
+    }
     func onlyNumbers(string: String) -> Bool {
         if string == "-" {
             return true
@@ -64,6 +99,7 @@ class ViewController: UIViewController, UITextFieldDelegate{
     }
     
     func onlyLetters(string: String) -> Bool {
+        guard string != "" else { return true }
         let leftSideField = CharacterSet.decimalDigits
         let rightSideField = CharacterSet(charactersIn: string)
         return !leftSideField.isSuperset(of: rightSideField)
