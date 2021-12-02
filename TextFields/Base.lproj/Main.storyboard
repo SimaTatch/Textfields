@@ -181,13 +181,14 @@
                                     <constraint firstItem="e8m-NI-kId" firstAttribute="top" secondItem="jjz-iE-jPC" secondAttribute="bottom" constant="2" id="wEo-Q2-ral"/>
                                 </constraints>
                             </stackView>
-                            <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="rhL-TF-mv8">
-                                <rect key="frame" x="37" y="454" width="341" height="4"/>
-                                <color key="tintColor" systemColor="systemGreenColor"/>
+                            <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progressViewStyle="bar" progress="0.40000000000000002" translatesAutoresizingMaskIntoConstraints="NO" id="rhL-TF-mv8">
+                                <rect key="frame" x="37" y="453" width="341" height="5"/>
+                                <color key="tintColor" systemColor="systemGray6Color"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="341" id="Dbr-l4-txO"/>
                                     <constraint firstAttribute="height" constant="4" id="Vng-Qv-WAn"/>
                                 </constraints>
+                                <color key="progressTintColor" systemColor="systemGreenColor"/>
                             </progressView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>

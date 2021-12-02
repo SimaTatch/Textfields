@@ -22,7 +22,7 @@ class ViewController: UIViewController, UITextFieldDelegate{
     var openURlTimer: Timer?
     private let minLength = 8
     private let length = 1
-    private lazy var regex = "^(?=.*[а-я])(?=.*[А-Я])(?=.*\\d)[А-Яа-я\\dd]{\(minLength),}$"
+    private lazy var regex = "^(?=.*[а-я])(?=.*[А-Я])(?=.*\\d)[А-Яа-я\\d]{\(minLength),}$"
     private lazy var regexOneCapitalLetter = "^[А-Я]*$"
     private lazy var regexOneLowercaseLetter = "^[а-я]*$"
     private lazy var regexOneDigit = "^[0-9]*$"
@@ -43,7 +43,7 @@ class ViewController: UIViewController, UITextFieldDelegate{
         //        5
         passwordTextField.delegate = self
         progressView.setProgress(0, animated: true)
-        progressView.progressViewStyle = UIProgressView.Style.default
+        progressView.progressViewStyle = UIProgressView.Style.bar
         //        some keyboard features
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWilHide), name: UIResponder.keyboardWillHideNotification, object: nil)
@@ -131,19 +131,19 @@ class ViewController: UIViewController, UITextFieldDelegate{
             if String(char).matches(regexOneDigit) && !digitAlreadyExist {
                 minOneDigitLabel.textColor = .systemGreen
                 minOneDigitLabel.text = "\u{2713}" + " Min 1 digit,"
-                self.progressView.progress += 2.5/10
+                colorProgressView ()
                 digitAlreadyExist.toggle()
                 continue
             } else if String(char).matches(regexOneLowercaseLetter)  && !lowercaseCountAlreadyExist {
                 minOneLowercaseLabel.textColor = .systemGreen
                 minOneLowercaseLabel.text = "\u{2713}" + " Min 1 lowercase,"
-                self.progressView.progress += 2.5/10
+                colorProgressView ()
                 lowercaseCountAlreadyExist.toggle()
                 continue
             } else if String(char).matches(regexOneCapitalLetter) && !capitalCountAlreadyExist {
                 minOneCapitalLabel.textColor = .systemGreen
                 minOneCapitalLabel.text = "\u{2713}" + " Min 1 capital required."
-                self.progressView.progress += 2.5/10
+                colorProgressView ()
                 capitalCountAlreadyExist.toggle()
                 continue
             }
@@ -153,6 +153,7 @@ class ViewController: UIViewController, UITextFieldDelegate{
             minLengthLabel.text = "\u{2713}" + " Min length 8 characters,"
             minLengthLabel.textColor = .systemGreen
             self.progressView.progress += 2.5/10
+            self.progressView.progressTintColor = .green
         }
     }
     
@@ -166,7 +167,17 @@ class ViewController: UIViewController, UITextFieldDelegate{
         minOneCapitalLabel.textColor = .black
         minOneCapitalLabel.text = "- Min 1 capital required."
         self.progressView.progress = 0
+        self.progressView.progressTintColor = .white
         return
+    }
+    
+    func colorProgressView () {
+        if self.progressView.progressTintColor == .red || self.progressView.progressTintColor == .orange  {
+            self.progressView.progress += 2.5/10
+            self.progressView.progressTintColor = .orange
+        } else {
+        self.progressView.progressTintColor = .red
+            self.progressView.progress += 2.5/10 }
     }
 }
 
