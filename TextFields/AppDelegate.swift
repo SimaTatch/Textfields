@@ -1,9 +1,4 @@
-//
-//  AppDelegate.swift
-//  TextFields
-//
-//  Created by Серафима  Татченкова  on 25.11.2021.
-//
+
 
 import UIKit
 

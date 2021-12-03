@@ -21,10 +21,10 @@ class ViewController: UIViewController, UITextFieldDelegate{
     let onlyLetters = OnlyLettersAndOnlyNums()
     public var openURlTimer: Timer?
     public let minLength = 8
-    public lazy var regex =  "^[A-Za-z0-9 !\"#$%&'()*+,-./:;<=>?@\\[\\\\\\]^_`{|}~].{\(minLength),}$"
-    public lazy var regexOneCapitalLetter = "^[A-Z]*$"
-    public lazy var regexOneLowercaseLetter = "^[a-z]*$"
-    public lazy var regexOneDigit = "^[0-9]*$"
+    public lazy var regex =  "^[A-Za-z0-9 !\"#$%&'()*,./:;<=>?@\\[\\\\\\]^_`{|}~].{\(minLength),}$"
+    public lazy var regexOneCapitalLetter = "^[A-Z]+$"
+    public lazy var regexOneLowercaseLetter = "^[a-z]+$"
+    public lazy var regexOneDigit = "^[0-9]+$"
     
     
     override func viewDidLoad() {
@@ -52,18 +52,28 @@ class ViewController: UIViewController, UITextFieldDelegate{
         //tap.cancelsTouchesInView = false
         view.addGestureRecognizer(tap)
     }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        onlyLettersTextField.becomeFirstResponder()
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        self.view.endEditing(true)
+        return false
     }
+    
+
     
     @objc func keyboardWillShow (notification: NSNotification) {
         if let keyboardSize = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue {
-            if self.view.frame.origin.y == 0 {
-                self.view.frame.origin.y -= keyboardSize.height/3
+            if self.letterDashNumberField.isFirstResponder {
+                if self.view.frame.origin.y == 0 {
+                    self.view.frame.origin.y -= keyboardSize.height/3
+                }
+            } else if self.linkTextField.isFirstResponder || self.passwordTextField.isFirstResponder {
+                if self.view.frame.origin.y == 0 {
+                    self.view.frame.origin.y -= keyboardSize.height
+                }
             }
         }
     }
+    
+    
     
     @objc func keyboardWilHide (notification: NSNotification) {
         if self.view.frame.origin.y != 0 {
@@ -90,6 +100,7 @@ class ViewController: UIViewController, UITextFieldDelegate{
             return onlyLetters.shoudAddCharecterToDashField(string: string,previousText: letterDashNumberField.text)
             //           MARK: TF5 passwordValidation
         case passwordTextField:
+
             let text = (textField.text ?? "") + string
             let res: String
             if range.length == 1 {
