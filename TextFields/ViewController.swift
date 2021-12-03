@@ -19,13 +19,12 @@ class ViewController: UIViewController, UITextFieldDelegate{
     public let allowedChars = 10
     let inputLimit = InputLimit()
     let onlyLetters = OnlyLettersAndOnlyNums()
-    var openURlTimer: Timer?
-    private let minLength = 8
-    private let length = 1
-    private lazy var regex = "^(?=.*[а-я])(?=.*[А-Я])(?=.*\\d)[А-Яа-я\\d]{\(minLength),}$"
-    private lazy var regexOneCapitalLetter = "^[А-Я]*$"
-    private lazy var regexOneLowercaseLetter = "^[а-я]*$"
-    private lazy var regexOneDigit = "^[0-9]*$"
+    public var openURlTimer: Timer?
+    public let minLength = 8
+    public lazy var regex =  "^[A-Za-z0-9 !\"#$%&'()*+,-./:;<=>?@\\[\\\\\\]^_`{|}~].{\(minLength),}$"
+    public lazy var regexOneCapitalLetter = "^[A-Z]*$"
+    public lazy var regexOneLowercaseLetter = "^[a-z]*$"
+    public lazy var regexOneDigit = "^[0-9]*$"
     
     
     override func viewDidLoad() {
@@ -51,7 +50,6 @@ class ViewController: UIViewController, UITextFieldDelegate{
         let tap = UITapGestureRecognizer(target: self, action: #selector(UIInputViewController.dismissKeyboard))
         //Uncomment the line below if you want the tap not not interfere and cancel other interactions.
         //tap.cancelsTouchesInView = false
-        
         view.addGestureRecognizer(tap)
     }
     
@@ -80,15 +78,29 @@ class ViewController: UIViewController, UITextFieldDelegate{
     }
     
     
-    func textField1(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        guard string != "" else {return true} // if backspace return true
+     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         switch textField {
             //            MARK: TF1, no digits
         case onlyLettersTextField:
+            guard string != "" else {return true}
             return onlyLetters.onlyLetters(string: string)
             //           MARK: TF3 only letters\dash\only numbers
         case letterDashNumberField:
+            guard string != "" else {return true}
             return onlyLetters.shoudAddCharecterToDashField(string: string,previousText: letterDashNumberField.text)
+            //           MARK: TF5 passwordValidation
+        case passwordTextField:
+            let text = (textField.text ?? "") + string
+            let res: String
+            if range.length == 1 {
+                let end = text.index(text.startIndex, offsetBy: text.count - 1)
+                res = String(text[text.startIndex..<end])
+            } else {
+                res = text
+            }
+            checkValidation(password: res)
+            textField.text = res
+            return false
         default:
             break
         }
@@ -97,19 +109,29 @@ class ViewController: UIViewController, UITextFieldDelegate{
     
     //            MARK: TF2, characters limit
     func textFieldDidChangeSelection(_ textField: UITextField) {
-        inputLimit.checkRemainingChars(inputLimitField, characterCountLabel)
+        switch textField {
+        case inputLimitField:
+            inputLimit.checkRemainingChars(inputLimitField, characterCountLabel)
+        default:
+            break
+        }
     }
     
     //            MARK: TF4, link
     
     func textFieldDidEndEditing(_ textField: UITextField) {
-        if openURlTimer != nil {
-            openURlTimer?.invalidate()
-            openURlTimer = nil
+        switch textField {
+        case linkTextField:
+            if openURlTimer != nil {
+                openURlTimer?.invalidate()
+                openURlTimer = nil
+            }
+            openURlTimer = Timer.scheduledTimer(timeInterval: 4.0, target: self, selector: #selector(searchForResult (_:)), userInfo: linkTextField.text!, repeats: false)
+            
+        default:
+            break
         }
-        openURlTimer = Timer.scheduledTimer(timeInterval: 4.0, target: self, selector: #selector(searchForResult (_:)), userInfo: linkTextField.text!, repeats: false)
     }
-    
     @objc func searchForResult (_ timer: Timer) {
         let pattern = "(?i)https?:\\/\\/(?:www\\.)?\\S+(?:\\/|\\b)"
         guard let text = linkTextField.text,
@@ -119,10 +141,11 @@ class ViewController: UIViewController, UITextFieldDelegate{
             print("Link was open successfully")
         }
     }
+
+
+//            MARK: TF5, password validation rules
     
-    //            MARK: TF5, password validation rules
-    
-    private func checkValidation (password: String) {
+    func checkValidation (password: String) {
         var capitalCountAlreadyExist = false
         var lowercaseCountAlreadyExist = false
         var digitAlreadyExist = false
@@ -148,7 +171,7 @@ class ViewController: UIViewController, UITextFieldDelegate{
                 continue
             }
         }
-        
+
         if password.matches(regex) {
             minLengthLabel.text = "\u{2713}" + " Min length 8 characters,"
             minLengthLabel.textColor = .systemGreen
@@ -176,37 +199,19 @@ class ViewController: UIViewController, UITextFieldDelegate{
             self.progressView.progress += 2.5/10
             self.progressView.progressTintColor = .orange
         } else {
-        self.progressView.progressTintColor = .red
+            self.progressView.progressTintColor = .red
             self.progressView.progress += 2.5/10 }
     }
 }
 
-extension ViewController {
-    func textField (_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        let text = (textField.text ?? "") + string
-        let res: String
-        if range.length == 1 {
-            let end = text.index(text.startIndex, offsetBy: text.count - 1)
-            res = String(text[text.startIndex..<end])
-        } else {
-            res = text
-        }
-        checkValidation(password: res)
-        textField.text = res
-        return false
-    }
-    
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        textField.resignFirstResponder()
-        return true
-    }
-}
 
 extension String {
     func matches(_ regex: String) -> Bool {
         return self.range(of: regex, options: .regularExpression, range: nil, locale: nil) != nil
     }
 }
+
+
 
 
 
