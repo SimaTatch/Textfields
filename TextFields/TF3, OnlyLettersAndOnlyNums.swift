@@ -28,10 +28,13 @@ class OnlyLettersAndOnlyNums {
         let rightSideField = CharacterSet(charactersIn: string)
         return !leftSideField.isSuperset(of: rightSideField)
     }
-    func onlyNumbers(string: String) -> Bool {
-        if string == "-" {
-            return true
-        }
-        return !OnlyLettersAndOnlyNums().onlyLetters(string: string)
-    }
+    
+//    func onlyNumbers(string: String) -> Bool {
+//        if string == "-" {
+//            return true
+//        }
+//        return !OnlyLettersAndOnlyNums().onlyLetters(string: string)
+//    }
+    
+    
 }

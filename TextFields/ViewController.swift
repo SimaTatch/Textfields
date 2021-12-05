@@ -37,7 +37,7 @@ class ViewController: UIViewController, UITextFieldDelegate{
         //        3
         letterDashNumberField.delegate = self
         //        4
-        self.linkTextField.addTarget(self, action: #selector(textFieldDidEndEditing(_:)), for: .editingChanged)
+        self.linkTextField.addTarget(self, action: #selector(urlTextChanged), for: .editingChanged)
         linkTextField.delegate = self
         //        5
         passwordTextField.delegate = self
@@ -52,6 +52,11 @@ class ViewController: UIViewController, UITextFieldDelegate{
         //tap.cancelsTouchesInView = false
         view.addGestureRecognizer(tap)
     }
+    
+    override func viewDidAppear(_ animated: Bool) {
+            onlyLettersTextField.becomeFirstResponder()
+        }
+
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         self.view.endEditing(true)
         return false
@@ -73,8 +78,6 @@ class ViewController: UIViewController, UITextFieldDelegate{
         }
     }
     
-    
-    
     @objc func keyboardWilHide (notification: NSNotification) {
         if self.view.frame.origin.y != 0 {
             self.view.frame.origin.y = 0
@@ -93,24 +96,36 @@ class ViewController: UIViewController, UITextFieldDelegate{
             //            MARK: TF1, no digits
         case onlyLettersTextField:
             guard string != "" else {return true}
-            return onlyLetters.onlyLetters(string: string)
+             return onlyLetters.onlyLetters(string: string)
+            //            MARK: TF2, characters limit
+        case inputLimitField:
+            let text = (textField.text ?? "") + string
+            let res: String
+            if range.length >= 1 {
+                let end = text.index(text.startIndex, offsetBy: text.count - range.length)
+                res = String(text[text.startIndex..<end])
+            } else {
+                res = text
+            }
+            textField.text = res
+            inputLimit.checkRemainingChars(res, characterCountLabel, inputLimitField)
+            return false
             //           MARK: TF3 only letters\dash\only numbers
         case letterDashNumberField:
             guard string != "" else {return true}
             return onlyLetters.shoudAddCharecterToDashField(string: string,previousText: letterDashNumberField.text)
             //           MARK: TF5 passwordValidation
-        case passwordTextField:
-
+        case passwordTextField :
             let text = (textField.text ?? "") + string
             let res: String
-            if range.length == 1 {
-                let end = text.index(text.startIndex, offsetBy: text.count - 1)
+            if range.length >= 1 {
+                let end = text.index(text.startIndex, offsetBy: text.count - range.length)
                 res = String(text[text.startIndex..<end])
             } else {
                 res = text
             }
-            checkValidation(password: res)
             textField.text = res
+            checkValidation(password: res)
             return false
         default:
             break
@@ -118,40 +133,25 @@ class ViewController: UIViewController, UITextFieldDelegate{
         return true
     }
     
-    //            MARK: TF2, characters limit
-    func textFieldDidChangeSelection(_ textField: UITextField) {
-        switch textField {
-        case inputLimitField:
-            inputLimit.checkRemainingChars(inputLimitField, characterCountLabel)
-        default:
-            break
-        }
-    }
     
     //            MARK: TF4, link
     
-    func textFieldDidEndEditing(_ textField: UITextField) {
-        switch textField {
-        case linkTextField:
-            if openURlTimer != nil {
-                openURlTimer?.invalidate()
-                openURlTimer = nil
-            }
-            openURlTimer = Timer.scheduledTimer(timeInterval: 4.0, target: self, selector: #selector(searchForResult (_:)), userInfo: linkTextField.text!, repeats: false)
-            
-        default:
-            break
-        }
-    }
-    @objc func searchForResult (_ timer: Timer) {
-        let pattern = "(?i)https?:\\/\\/(?:www\\.)?\\S+(?:\\/|\\b)"
-        guard let text = linkTextField.text,
-              text.range(of: pattern, options: .regularExpression) != nil,
-              let url = URL(string: text) else { return print("что-то не так")}
-        UIApplication.shared.open(url, options: [:]) { (done) in
-            print("Link was open successfully")
-        }
-    }
+    @objc
+      func urlTextChanged() {
+          let pattern = "(?i)https?:\\/\\/(?:www\\.)?\\S+(?:\\/|\\b)"
+
+          guard let text = linkTextField.text,
+                text.range(of: pattern, options: .regularExpression) != nil,
+                let url = URL(string: text) else { return  }
+          openURlTimer?.invalidate()
+          openURlTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: false, block: { timer in
+              UIApplication.shared.open(url, options: [:]) { (done) in
+                  print("Link was open successfully")
+              }
+          })
+
+      }
+
 
 
 //            MARK: TF5, password validation rules
@@ -182,12 +182,10 @@ class ViewController: UIViewController, UITextFieldDelegate{
                 continue
             }
         }
-
         if password.matches(regex) {
             minLengthLabel.text = "\u{2713}" + " Min length 8 characters,"
             minLengthLabel.textColor = .systemGreen
-            self.progressView.progress += 2.5/10
-            self.progressView.progressTintColor = .green
+            colorProgressView()
         }
     }
     
@@ -202,16 +200,19 @@ class ViewController: UIViewController, UITextFieldDelegate{
         minOneCapitalLabel.text = "- Min 1 capital required."
         self.progressView.progress = 0
         self.progressView.progressTintColor = .white
-        return
     }
     
     func colorProgressView () {
-        if self.progressView.progressTintColor == .red || self.progressView.progressTintColor == .orange  {
+        if self.progressView.progress == 0 {
             self.progressView.progress += 2.5/10
-            self.progressView.progressTintColor = .orange
-        } else {
             self.progressView.progressTintColor = .red
+        } else if self.progressView.progress == 2.5/10 || self.progressView.progress == 5.0/10 {
+            self.progressView.progressTintColor = .orange
             self.progressView.progress += 2.5/10 }
+        else if self.progressView.progress == 7.5/10 {
+            self.progressView.progressTintColor = .green
+            self.progressView.progress += 2.5/10
+        }
     }
 }
 
